@@ -13,7 +13,7 @@ python scaffold.py
 - [x] **1.** short_conv
 - [x] **2.** kda_qkv
 - [x] **3.** kda_gates
-- [ ] **4.** lower_bounded_decay
+- [x] **4.** lower_bounded_decay
 - [ ] **5.** kda_state_update
 - [ ] **6.** kda_recurrence
 - [ ] **7.** cumulative_decay

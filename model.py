@@ -76,8 +76,19 @@ def kda_gates(x, params):
 
     return beta, z
 
-# Step 4 - lower_bounded_decay (not yet solved)
-# TODO: implement
+# Step 4 - lower_bounded_decay
+def lower_bounded_decay(z, A, g_min=-5.0):
+    """alpha = exp(g_min * sigmoid(exp(A) * z)), each entry in [exp(g_min), 1).
+
+    z: (T, dk) decay logits.  A: scalar per-head log-scale.
+    """
+    scaled_z = np.exp(A) * z
+
+    sigmoid_z = 1 / (1 + np.exp(-scaled_z))
+
+    alpha = np.exp(g_min * sigmoid_z)
+
+    return alpha
 
 # Step 5 - kda_state_update (not yet solved)
 # TODO: implement
