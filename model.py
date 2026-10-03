@@ -109,8 +109,38 @@ def kda_state_update(S, k, v, alpha, beta):
 
     return S_new
 
-# Step 6 - kda_recurrence (not yet solved)
-# TODO: implement
+# Step 6 - kda_recurrence
+def kda_recurrence(q, k, v, alpha, beta, S0=None):
+    """Run KDA token by token: update state, then read O[t] = S_t^T q[t].
+
+    Returns (O, S_final) with O of shape (T, dv). S0 defaults to zeros; never
+    mutate the caller's S0.
+    """
+    T, dk = q.shape
+    dv = v.shape[1]
+
+    # Initialize state
+    if S0 is None:
+        S = np.zeros((dk, dv), dtype=q.dtype)
+    else:
+        S = S0.copy()
+
+    O = np.zeros((T, dv), dtype=q.dtype)
+
+    for t in range(T):
+        # 1. Update state using current token
+        S = kda_state_update(
+            S,
+            k[t],          # (dk,)
+            v[t],          # (dv,)
+            alpha[t],      # (dk,)
+            beta[t]        # scalar
+        )
+
+        # 2. Read from the UPDATED state
+        O[t] = q[t] @ S   # (dk,) @ (dk, dv) -> (dv,)
+
+    return O, S
 
 # Step 7 - cumulative_decay (not yet solved)
 # TODO: implement
