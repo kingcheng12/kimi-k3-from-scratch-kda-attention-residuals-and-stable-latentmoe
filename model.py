@@ -142,8 +142,13 @@ def kda_recurrence(q, k, v, alpha, beta, S0=None):
 
     return O, S
 
-# Step 7 - cumulative_decay (not yet solved)
-# TODO: implement
+# Step 7 - cumulative_decay
+def cumulative_decay(alpha):
+    """Inclusive channel-wise cumulative product of alpha down the time axis.
+
+    alpha: (C, dk) per-step retention factors -> Gamma: (C, dk).
+    """
+    return np.cumprod(alpha, axis=0)
 
 # Step 8 - chunk_pseudo_values (not yet solved)
 # TODO: implement

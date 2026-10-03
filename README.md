@@ -16,7 +16,7 @@ python scaffold.py
 - [x] **4.** lower_bounded_decay
 - [x] **5.** kda_state_update
 - [x] **6.** kda_recurrence
-- [ ] **7.** cumulative_decay
+- [x] **7.** cumulative_decay
 - [ ] **8.** chunk_pseudo_values
 - [ ] **9.** kda_chunkwise
 - [ ] **10.** kda_output_gate
