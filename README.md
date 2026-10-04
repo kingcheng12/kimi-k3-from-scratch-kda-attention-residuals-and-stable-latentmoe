@@ -18,7 +18,7 @@ python scaffold.py
 - [x] **6.** kda_recurrence
 - [x] **7.** cumulative_decay
 - [x] **8.** chunk_pseudo_values
-- [ ] **9.** kda_chunkwise
+- [x] **9.** kda_chunkwise
 - [ ] **10.** kda_output_gate
 - [ ] **11.** mla_compress_reconstruct
 - [ ] **12.** nope_attention

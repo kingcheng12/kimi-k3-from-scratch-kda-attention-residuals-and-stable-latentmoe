@@ -183,8 +183,53 @@ def chunk_pseudo_values(k, v, alpha, beta, S0):
 
     return U
 
-# Step 9 - kda_chunkwise (not yet solved)
-# TODO: implement
+# Step 9 - kda_chunkwise
+def kda_chunkwise(q, k, v, alpha, beta, chunk_size, S0=None):
+    """Chunkwise-parallel KDA (Eq. 4): O_c = Qhat @ S + tril(Qhat Kcheck^T) @ U.
+
+    State hand-off: S <- Gamma[-1][:,None] * (S + Kcheck^T U). Must equal
+    kda_recurrence for every chunk size. Returns (O, S_final).
+    """
+    T, dk = q.shape
+    dv = v.shape[1]
+
+    # Initial state
+    if S0 is None:
+        S = np.zeros((dk, dv), dtype=q.dtype)
+    else:
+        S = S0.copy()
+
+    O = np.zeros((T, dv), dtype=q.dtype)
+
+    # Process one chunk at a time
+    for start in range(0, T, chunk_size):
+        end = min(start + chunk_size, T)
+
+        qc = q[start:end]    
+        kc = k[start:end]      
+        vc = v[start:end]      
+        ac = alpha[start:end]     
+        bc = beta[start:end]   
+
+        # Channel-wise cumulative decay
+        Gamma = cumulative_decay(ac)    
+
+        # Transformed Q/K
+        Qhat = qc * Gamma              
+        Kcheck = kc / Gamma        
+
+        # Compute pseudo-values using state at chunk entrance
+        U = chunk_pseudo_values(kc, vc, ac, bc, S)                              
+        # Inclusive causal interactions
+        causal = np.tril(Qhat @ Kcheck.T) 
+
+        # Chunk outputs
+        O[start:end] = (Qhat @ S        + causal @ U      )
+
+        # Hand state to next chunk
+        S = Gamma[-1][:, None] * (S + Kcheck.T @ U)
+
+    return O, S
 
 # Step 10 - kda_output_gate (not yet solved)
 # TODO: implement
