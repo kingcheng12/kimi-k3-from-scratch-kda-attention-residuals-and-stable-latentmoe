@@ -150,8 +150,38 @@ def cumulative_decay(alpha):
     """
     return np.cumprod(alpha, axis=0)
 
-# Step 8 - chunk_pseudo_values (not yet solved)
-# TODO: implement
+# Step 8 - chunk_pseudo_values
+def chunk_pseudo_values(k, v, alpha, beta, S0):
+    """Solve (I + diag(beta) strict_tril(Khat Kcheck^T)) U = diag(beta)(V - Khat S0).
+
+    Khat = k * Gamma, Kcheck = k / Gamma, Gamma = cumulative_decay(alpha).
+    Returns U of shape (C, dv).
+    """
+    C = k.shape[0]
+
+    Gamma = cumulative_decay(alpha)
+
+    Khat = k * Gamma
+    Kcheck = k / Gamma
+
+    # Pairwise interaction matrix
+    interaction = Khat @ Kcheck.T
+
+    # Keep only entries strictly below the diagonal
+    L = np.tril(interaction, k=-1)
+
+    # I + diag(beta) @ L
+    # Multiplying by diag(beta) scales each ROW of L.
+    A = np.eye(C, dtype=k.dtype) + beta[:, None] * L
+
+    # diag(beta) @ (V - Khat @ S0)
+    residual = v - Khat @ S0      
+    rhs = beta[:, None] * residual 
+
+    # Solve A @ U = rhs
+    U = np.linalg.solve(A, rhs)
+
+    return U
 
 # Step 9 - kda_chunkwise (not yet solved)
 # TODO: implement
