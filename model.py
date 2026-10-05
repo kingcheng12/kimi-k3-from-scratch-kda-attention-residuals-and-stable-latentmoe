@@ -249,8 +249,32 @@ def kda_output_gate(o, x, Wg, Wo):
 
     return y
 
-# Step 11 - mla_compress_reconstruct (not yet solved)
-# TODO: implement
+# Step 11 - mla_compress_reconstruct
+def mla_compress_reconstruct(x, Wc, Wk_up, Wv_up, n_heads):
+    """c = x @ Wc; K = (c @ Wk_up).reshape(T, H, dh); V likewise.
+
+    Returns (c, K, V) with shapes (T, r), (T, H, dh), (T, H, dh).
+    """
+    T = x.shape[0]
+
+    # Compress latent representation
+    c = x @ Wc                        
+
+    # Reconstruct full K and V
+    K_flat = c @ Wk_up           
+    V_flat = c @ Wv_up             
+
+    # Infer per-head dimension
+    total_dim = K_flat.shape[-1]
+    assert total_dim % n_heads == 0
+
+    dh = total_dim // n_heads
+
+    # Split into attention heads
+    K = K_flat.reshape(T, n_heads, dh)   
+    V = V_flat.reshape(T, n_heads, dh)  
+
+    return c, K, V
 
 # Step 12 - nope_attention (not yet solved)
 # TODO: implement
