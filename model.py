@@ -276,8 +276,51 @@ def mla_compress_reconstruct(x, Wc, Wk_up, Wv_up, n_heads):
 
     return c, K, V
 
-# Step 12 - nope_attention (not yet solved)
-# TODO: implement
+# Step 12 - nope_attention
+def nope_attention(x, Wq, Wc, Wk_up, Wv_up, n_heads):
+    """Causal multi-head attention over MLA-reconstructed K,V - no positions.
+
+    Q = (x @ Wq).reshape(T, H, dh); per head softmax(QK^T/sqrt(dh)) V with a
+    causal mask; concatenate heads -> (T, H*dh).
+    """
+    T = x.shape[0]
+
+    # Reconstruct K, V from compressed latent
+    _, K, V = mla_compress_reconstruct(
+        x, Wc, Wk_up, Wv_up, n_heads
+    )                         
+
+    dh = K.shape[-1]
+
+    # Queries
+    Q = (x @ Wq).reshape(T, n_heads, dh)  
+
+    # Put heads first for easier batched attention
+    Q = Q.transpose(1, 0, 2)        
+    K = K.transpose(1, 0, 2)         
+    V = V.transpose(1, 0, 2)         
+
+    # Attention scores
+    scores = Q @ K.transpose(0, 2, 1)
+    scores = scores / np.sqrt(dh)
+
+    # Causal mask: prevent attending to future tokens
+    mask = np.triu(np.ones((T, T), dtype=bool), k=1)
+    scores = np.where(mask[None, :, :], -np.inf, scores)
+
+    # Numerically stable softmax
+    scores = scores - np.max(scores, axis=-1, keepdims=True)
+    weights = np.exp(scores)
+    weights = weights / np.sum(weights, axis=-1, keepdims=True)
+
+    # Weighted sum of values
+    out = weights @ V                
+
+    # Back to (T, H, dh), then concatenate heads
+    out = out.transpose(1, 0, 2)       
+    out = out.reshape(T, n_heads * dh)   
+
+    return out
 
 # Step 13 - mla_output_gate (not yet solved)
 # TODO: implement
