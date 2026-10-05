@@ -231,8 +231,23 @@ def kda_chunkwise(q, k, v, alpha, beta, chunk_size, S0=None):
 
     return O, S
 
-# Step 10 - kda_output_gate (not yet solved)
-# TODO: implement
+# Step 10 - kda_output_gate
+def kda_output_gate(o, x, Wg, Wo):
+    """y = (sigmoid(x @ Wg) * RMSNorm(o)) @ Wo, RMSNorm = o / sqrt(mean(o^2)+1e-6).
+
+    o: (T, dv) recurrent outputs.  x: (T, d) layer input.  Returns (T, d).
+    """
+    rms = np.sqrt(np.mean(o ** 2, axis=-1, keepdims=True) + 1e-6)
+    o_norm = o / rms                 
+
+    # Output gate
+    gate_logits = x @ Wg                
+    gate = 1 / (1 + np.exp(-gate_logits)) 
+
+    # Gate recurrent output, then project
+    y = (gate * o_norm) @ Wo            
+
+    return y
 
 # Step 11 - mla_compress_reconstruct (not yet solved)
 # TODO: implement
