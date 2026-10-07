@@ -22,7 +22,7 @@ python scaffold.py
 - [x] **10.** kda_output_gate
 - [x] **11.** mla_compress_reconstruct
 - [x] **12.** nope_attention
-- [ ] **13.** mla_output_gate
+- [x] **13.** mla_output_gate
 - [ ] **14.** hybrid_schedule
 - [ ] **15.** attnres_weights
 - [ ] **16.** attnres_full

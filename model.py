@@ -322,8 +322,18 @@ def nope_attention(x, Wq, Wc, Wk_up, Wv_up, n_heads):
 
     return out
 
-# Step 13 - mla_output_gate (not yet solved)
-# TODO: implement
+# Step 13 - mla_output_gate
+def mla_output_gate(o, x, Wg, Wo):
+    """y = (sigmoid(x @ Wg) * o) @ Wo - note: no RMSNorm here, unlike KDA's gate.
+
+    o: (T, H*dh) attention output.  x: (T, d) layer input.  Returns (T, d).
+    """
+    gate_logits = x @ Wg
+    gate = 1 / (1 + np.exp(-gate_logits))
+
+    y = (gate * o) @ Wo
+
+    return y
 
 # Step 14 - hybrid_schedule (not yet solved)
 # TODO: implement
