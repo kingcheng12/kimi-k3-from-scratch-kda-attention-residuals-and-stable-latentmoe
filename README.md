@@ -23,7 +23,7 @@ python scaffold.py
 - [x] **11.** mla_compress_reconstruct
 - [x] **12.** nope_attention
 - [x] **13.** mla_output_gate
-- [ ] **14.** hybrid_schedule
+- [x] **14.** hybrid_schedule
 - [ ] **15.** attnres_weights
 - [ ] **16.** attnres_full
 - [ ] **17.** block_partial_sums
