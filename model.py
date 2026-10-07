@@ -340,8 +340,30 @@ def hybrid_schedule(n_repeats):
     """['KDA','KDA','KDA','MLA'] repeated n_repeats times, plus a final 'MLA'."""
     return ['KDA', 'KDA', 'KDA', 'MLA'] * n_repeats + ['MLA']
 
-# Step 15 - attnres_weights (not yet solved)
-# TODO: implement
+# Step 15 - attnres_weights
+def attnres_weights(pseudo_q, sources):
+    """Softmax over depth: w[i, t] prop. to exp(pseudo_q . RMSNorm(sources[i][t])).
+
+    sources: list of n (T, d) arrays.  Returns (n, T); columns sum to 1.
+    """
+    S = np.stack(sources, axis=0)     
+
+    # RMSNorm
+    rms = np.sqrt(np.mean(S ** 2, axis=-1, keepdims=True) + 1e-6)
+    S_norm = S / rms             
+
+    # Dot product
+    if pseudo_q.ndim == 1:
+        scores = np.sum(S_norm * pseudo_q[None, None, :], axis=-1)
+    else:
+        scores = np.sum(S_norm * pseudo_q[None, :, :], axis=-1)
+
+    # Softmax over depth
+    scores = scores - np.max(scores, axis=0, keepdims=True)
+    exp_scores = np.exp(scores)
+    weights = exp_scores / np.sum(exp_scores, axis=0, keepdims=True)
+
+    return weights
 
 # Step 16 - attnres_full (not yet solved)
 # TODO: implement

@@ -24,7 +24,7 @@ python scaffold.py
 - [x] **12.** nope_attention
 - [x] **13.** mla_output_gate
 - [x] **14.** hybrid_schedule
-- [ ] **15.** attnres_weights
+- [x] **15.** attnres_weights
 - [ ] **16.** attnres_full
 - [ ] **17.** block_partial_sums
 - [ ] **18.** attnres_block
