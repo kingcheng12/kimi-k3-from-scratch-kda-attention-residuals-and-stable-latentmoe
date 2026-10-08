@@ -25,7 +25,7 @@ python scaffold.py
 - [x] **13.** mla_output_gate
 - [x] **14.** hybrid_schedule
 - [x] **15.** attnres_weights
-- [ ] **16.** attnres_full
+- [x] **16.** attnres_full
 - [ ] **17.** block_partial_sums
 - [ ] **18.** attnres_block
 - [ ] **19.** situ_glu

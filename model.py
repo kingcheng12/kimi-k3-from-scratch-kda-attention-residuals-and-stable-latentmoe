@@ -365,8 +365,22 @@ def attnres_weights(pseudo_q, sources):
 
     return weights
 
-# Step 16 - attnres_full (not yet solved)
-# TODO: implement
+# Step 16 - attnres_full
+def attnres_full(pseudo_q, sources):
+    """h[t] = sum_i attnres_weights(...)[i, t] * sources[i][t] (raw values).
+
+    Returns (T, d).
+    """
+    # TODO
+    w = attnres_weights(pseudo_q, sources)
+
+    # (n, T, d)
+    S = np.stack(sources, axis=0)
+
+    # Weighted sum across depth/source dimension
+    h = np.sum(w[:, :, None] * S, axis=0)
+
+    return h
 
 # Step 17 - block_partial_sums (not yet solved)
 # TODO: implement
