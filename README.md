@@ -26,7 +26,7 @@ python scaffold.py
 - [x] **14.** hybrid_schedule
 - [x] **15.** attnres_weights
 - [x] **16.** attnres_full
-- [ ] **17.** block_partial_sums
+- [x] **17.** block_partial_sums
 - [ ] **18.** attnres_block
 - [ ] **19.** situ_glu
 - [ ] **20.** route_topk

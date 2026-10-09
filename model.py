@@ -382,8 +382,20 @@ def attnres_full(pseudo_q, sources):
 
     return h
 
-# Step 17 - block_partial_sums (not yet solved)
-# TODO: implement
+# Step 17 - block_partial_sums
+def block_partial_sums(layer_outputs):
+    """Running sums of a block's layer outputs; entry i sums outputs 0..i.
+
+    Returns a list of independent (T, d) arrays; last entry = block sum b_n.
+    """
+    partial_sums = []
+    running = np.zeros_like(layer_outputs[0])
+
+    for out in layer_outputs:
+        running = running + out
+        partial_sums.append(running.copy())
+
+    return partial_sums
 
 # Step 18 - attnres_block (not yet solved)
 # TODO: implement
