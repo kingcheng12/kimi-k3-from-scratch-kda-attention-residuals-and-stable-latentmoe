@@ -430,8 +430,42 @@ def situ_glu(x, Wg, Wu, beta1=4.0, beta2=25.0):
 
     return (g_cap * gate) * u_cap
 
-# Step 20 - route_topk (not yet solved)
-# TODO: implement
+# Step 20 - route_topk
+def route_topk(x, Wr, bias, k):
+    """s = sigmoid(x @ Wr); top-k by s + bias (stable, descending);
+    p = raw selected scores normalized per token. Returns (s, idx, p).
+    """
+    # Raw routing scores
+    logits = x @ Wr                           # (T, E)
+
+    # Overflow-safe sigmoid
+    s = 0.5 * (1.0 + np.tanh(0.5 * logits)) # (T, E)
+
+    # Bias affects expert selection only
+    routing_scores = s + bias                # (T, E)
+
+    # Stable descending sort, then take top-k
+    idx = np.argsort(
+        -routing_scores,
+        axis=-1,
+        kind="stable"
+    )[:, :k]                                  # (T, k)
+
+    # Gather RAW scores, not bias-adjusted scores
+    selected = np.take_along_axis(
+        s,
+        idx,
+        axis=-1
+    )                                         # (T, k)
+
+    # Normalize selected routing weights per token
+    p = selected / np.sum(
+        selected,
+        axis=-1,
+        keepdims=True
+    )
+
+    return s, idx, p
 
 # Step 21 - routed_experts (not yet solved)
 # TODO: implement
