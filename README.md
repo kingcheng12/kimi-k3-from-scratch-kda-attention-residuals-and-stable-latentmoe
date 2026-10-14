@@ -28,7 +28,7 @@ python scaffold.py
 - [x] **16.** attnres_full
 - [x] **17.** block_partial_sums
 - [x] **18.** attnres_block
-- [ ] **19.** situ_glu
+- [x] **19.** situ_glu
 - [ ] **20.** route_topk
 - [ ] **21.** routed_experts
 - [ ] **22.** stable_latent_moe

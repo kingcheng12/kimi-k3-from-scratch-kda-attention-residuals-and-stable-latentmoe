@@ -410,8 +410,25 @@ def attnres_block(pseudo_q, block_reps, partial):
 
     return attnres_full(pseudo_q, sources)
 
-# Step 19 - situ_glu (not yet solved)
-# TODO: implement
+# Step 19 - situ_glu
+def situ_glu(x, Wg, Wu, beta1=4.0, beta2=25.0):
+    """(softcap(x@Wg, b1) * sigmoid(x@Wg)) * softcap(x@Wu, b2), softcap = b*tanh(u/b).
+
+    Use sigmoid(g) = 0.5*(1 + tanh(0.5*g)) to stay overflow-safe. |out| <= b1*b2.
+    """
+    g = x @ Wg
+    u = x @ Wu
+
+    # Soft-capped gate branch
+    g_cap = beta1 * np.tanh(g / beta1)
+
+    # Overflow-safe sigmoid
+    gate = 0.5 * (1.0 + np.tanh(0.5 * g))
+
+    # Soft-capped up branch
+    u_cap = beta2 * np.tanh(u / beta2)
+
+    return (g_cap * gate) * u_cap
 
 # Step 20 - route_topk (not yet solved)
 # TODO: implement
