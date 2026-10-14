@@ -492,8 +492,48 @@ def routed_experts(z, idx, p, experts):
 
     return u
 
-# Step 22 - stable_latent_moe (not yet solved)
-# TODO: implement
+# Step 22 - stable_latent_moe
+def stable_latent_moe(x, params):
+    """y = sum_shared SiTU(x) + RMSNorm(routed_aggregate) @ Wup (Eq. 11).
+
+    Route on full-width x; compute in latent width; RMSNorm(u) before Wup.
+    """
+    # 1. Shared experts operate at full width
+    shared_out = np.zeros_like(x)
+
+    for Wg, Wu in params["shared"]:
+        shared_out += situ_glu(x, Wg, Wu)  
+
+    # 2. Route using the original full-width representation
+    _, idx, p = route_topk(
+        x,
+        params["Wr"],
+        params["bias"],
+        params["k"]
+    )                                    
+
+    # 3. Compress to latent width
+    z = x @ params["Wdown"]               
+
+    # 4. Compute selected experts in latent space
+    u = routed_experts(
+        z,
+        idx,
+        p,
+        params["experts"]
+    )                                      
+
+    # 5. RMSNorm routed aggregate
+    rms = np.sqrt(
+        np.mean(u ** 2, axis=-1, keepdims=True) + 1e-6
+    )
+    u_norm = u / rms                         
+
+    # 6. Project routed result back to model width
+    routed_out = u_norm @ params["Wup"]    
+
+    # 7. Shared + routed paths
+    return shared_out + routed_out
 
 # Step 23 - topk_cutoffs (not yet solved)
 # TODO: implement

@@ -31,7 +31,7 @@ python scaffold.py
 - [x] **19.** situ_glu
 - [x] **20.** route_topk
 - [x] **21.** routed_experts
-- [ ] **22.** stable_latent_moe
+- [x] **22.** stable_latent_moe
 - [ ] **23.** topk_cutoffs
 - [ ] **24.** quantile_balance_update
 - [ ] **25.** histogram_quantile
