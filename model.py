@@ -467,8 +467,30 @@ def route_topk(x, Wr, bias, k):
 
     return s, idx, p
 
-# Step 21 - routed_experts (not yet solved)
-# TODO: implement
+# Step 21 - routed_experts
+def routed_experts(z, idx, p, experts):
+    """u[t] = sum_j p[t,j] * situ_glu(z[t], *experts[idx[t,j]]).
+
+    z: (T, l).  experts: list of (Wg, Wu) latent-width SiTU-GLUs. Returns (T, l).
+    """
+    T, l = z.shape
+    k = idx.shape[1]
+
+    u = np.zeros_like(z)
+
+    for t in range(T):
+        for j in range(k):
+            expert_id = idx[t, j]
+
+            Wg, Wu = experts[expert_id]
+
+            expert_out = situ_glu(
+                z[t], Wg, Wu
+            )                           # (l,)
+
+            u[t] += p[t, j] * expert_out
+
+    return u
 
 # Step 22 - stable_latent_moe (not yet solved)
 # TODO: implement
