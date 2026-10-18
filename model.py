@@ -603,8 +603,37 @@ def histogram_quantile(x, n_bins, lo, hi, q_frac):
     # Return that bin's right edge
     return edges[bin_idx + 1]
 
-# Step 26 - newton_schulz (not yet solved)
-# TODO: implement
+# Step 26 - newton_schulz
+def newton_schulz(G, n_iters=5):
+    """Muon's Newton-Schulz orthogonalization (a,b,c = 3.4445, -4.7750, 2.0315).
+
+    Normalize by the Frobenius norm (+1e-7), iterate the quintic, transpose
+    handling for tall matrices. Singular values -> 1.
+    """
+    assert G.ndim == 2
+
+    a, b, c = 3.4445, -4.7750, 2.0315
+
+    X = G.copy()
+
+    # Transpose tall matrices so rows <= columns
+    transposed = X.shape[0] > X.shape[1]
+    if transposed:
+        X = X.T
+
+    # Frobenius normalization
+    X = X / (np.linalg.norm(X, ord="fro") + 1e-7)
+
+    for _ in range(n_iters):
+        A = X @ X.T
+        B = b * A + c * (A @ A)
+        X = a * X + B @ X
+
+    # Restore original orientation
+    if transposed:
+        X = X.T
+
+    return X
 
 # Step 27 - per_head_muon (not yet solved)
 # TODO: implement

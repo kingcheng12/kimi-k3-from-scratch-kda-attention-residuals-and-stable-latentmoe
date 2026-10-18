@@ -35,7 +35,7 @@ python scaffold.py
 - [x] **23.** topk_cutoffs
 - [x] **24.** quantile_balance_update
 - [x] **25.** histogram_quantile
-- [ ] **26.** newton_schulz
+- [x] **26.** newton_schulz
 - [ ] **27.** per_head_muon
 - [ ] **28.** mini_k3_forward
 
