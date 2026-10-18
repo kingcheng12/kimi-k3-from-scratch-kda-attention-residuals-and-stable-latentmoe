@@ -32,7 +32,7 @@ python scaffold.py
 - [x] **20.** route_topk
 - [x] **21.** routed_experts
 - [x] **22.** stable_latent_moe
-- [ ] **23.** topk_cutoffs
+- [x] **23.** topk_cutoffs
 - [ ] **24.** quantile_balance_update
 - [ ] **25.** histogram_quantile
 - [ ] **26.** newton_schulz
