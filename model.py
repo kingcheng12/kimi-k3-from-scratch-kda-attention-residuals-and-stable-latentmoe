@@ -551,8 +551,31 @@ def topk_cutoffs(s, bias, k):
 
     return routes, cutoffs
 
-# Step 24 - quantile_balance_update (not yet solved)
-# TODO: implement
+# Step 24 - quantile_balance_update
+def quantile_balance_update(s, bias, k):
+    """QB (Eq. 14): bhat_j = -(the (q+1)-th largest of s[:, j] - cutoffs),
+    q = m*k // n; return bhat - mean(bhat).
+    """
+    m, n = s.shape
+    q = m * k // n
+
+    # Per-token (k+1)-th biased routing score
+    _, cutoffs = topk_cutoffs(s, bias, k)     
+
+    # Difference between each expert's raw score and token cutoff
+    diff = s - cutoffs[:, None]           
+
+    # Sort each expert's values across tokens, descending.
+    # Index q corresponds to the (q+1)-th largest.
+    sorted_diff = np.sort(diff, axis=0)[::-1]
+
+    bhat = -sorted_diff[q]              
+
+    # Bias is identifiable only up to an additive constant,
+    # so center it to zero mean.
+    bhat = bhat - np.mean(bhat)
+
+    return bhat
 
 # Step 25 - histogram_quantile (not yet solved)
 # TODO: implement

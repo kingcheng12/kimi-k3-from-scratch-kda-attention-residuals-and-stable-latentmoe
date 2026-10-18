@@ -33,7 +33,7 @@ python scaffold.py
 - [x] **21.** routed_experts
 - [x] **22.** stable_latent_moe
 - [x] **23.** topk_cutoffs
-- [ ] **24.** quantile_balance_update
+- [x] **24.** quantile_balance_update
 - [ ] **25.** histogram_quantile
 - [ ] **26.** newton_schulz
 - [ ] **27.** per_head_muon
