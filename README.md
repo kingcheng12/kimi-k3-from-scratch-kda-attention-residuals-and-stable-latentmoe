@@ -37,7 +37,7 @@ python scaffold.py
 - [x] **25.** histogram_quantile
 - [x] **26.** newton_schulz
 - [x] **27.** per_head_muon
-- [ ] **28.** mini_k3_forward
+- [x] **28.** mini_k3_forward
 
 ---
 

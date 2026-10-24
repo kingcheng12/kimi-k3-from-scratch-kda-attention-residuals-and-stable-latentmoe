@@ -656,6 +656,216 @@ def per_head_muon(M, n_heads, n_iters=5):
 
     return np.concatenate(heads, axis=1)
 
-# Step 28 - mini_k3_forward (not yet solved)
-# TODO: implement
+# Step 28 - mini_k3_forward
+def mini_k3_forward(tokens, seed):
+    """Miniature Kimi K3 forward pass. Returns (T, 17) logits.
+
+    Parameter creation order (all rng.normal(0.0, 0.3, size=...)):
+      emb (17, 16)
+      then for each layer of hybrid_schedule(1):
+        wq_res (16,)
+        KDA: Wq (16,8), Wk (16,8), Wv (16,8), cq (3,8), ck (3,8), cv (3,8),
+             wb (16,), Wd1 (16,4), Wd2 (4,8), ba (8,), Wg (16,8), Wo (8,16)
+             (bb = 0.0 and A = 0.0 are constants, not drawn)
+        MLA: Wq (16,16), Wc (16,8), Wk_up (8,16), Wv_up (8,16),
+             Wg (16,16), Wo (16,16)
+        MoE: Wdown (16,8), Wup (8,16), Wr (16,8), bias = zeros(8), k=2,
+             experts: 8 x (Wg (8,8), Wu (8,8)) drawn gate-then-up per expert,
+             shared: 2 x (Wg (16,16), Wu (16,16)) drawn gate-then-up
+      w_final (16,)
+    """
+    rng = np.random.default_rng(seed)
+    def W(*shape):
+        return rng.normal(0.0, 0.3, size=shape)
+    # Fixed dimensions
+    vocab = 17
+    d = 16
+    dk = 8
+    dv = 8
+    n_heads = 2
+    latent = 8
+    n_experts = 8
+    top_k = 2
+    conv_k = 3
+    decay_rank = 4
+
+    # --------------------------------------------------
+    # 1. Create parameters in EXACT required RNG order
+    # --------------------------------------------------
+
+    emb = W(vocab, d)
+
+    layers = []
+
+    for layer_type in hybrid_schedule(1):
+        # AttnRes pseudo-query
+        wq_res = W(d)
+
+        # Attention parameters
+        if layer_type == "KDA":
+            attn = {
+                "Wq": W(d, dk),
+                "Wk": W(d, dk),
+                "Wv": W(d, dv),
+
+                "cq": W(conv_k, dk),
+                "ck": W(conv_k, dk),
+                "cv": W(conv_k, dv),
+
+                "wb": W(d),
+                "bb": 0.0,
+
+                "Wd1": W(d, decay_rank),
+                "Wd2": W(decay_rank, dk),
+                "ba": W(dk),
+
+                "Wg": W(d, dv),
+                "Wo": W(dv, d),
+            }
+
+        else:  # MLA
+            attn = {
+                "Wq": W(d, n_heads * dk),
+                "Wc": W(d, latent),
+                "Wk_up": W(latent, n_heads * dk),
+                "Wv_up": W(latent, n_heads * dk),
+
+                "Wg": W(d, n_heads * dk),
+                "Wo": W(n_heads * dk, d),
+            }
+
+        # MoE parameters
+        moe = {
+            "Wdown": W(d, latent),
+            "Wup": W(latent, d),
+            "Wr": W(d, n_experts),
+            "bias": np.zeros(n_experts),
+            "k": top_k,
+            "experts": [],
+            "shared": [],
+        }
+
+        # Routed experts:
+        # MUST draw Wg then Wu for each expert
+        for _ in range(n_experts):
+            expert_Wg = W(latent, latent)
+            expert_Wu = W(latent, latent)
+            moe["experts"].append(
+                (expert_Wg, expert_Wu)
+            )
+
+        # Shared experts:
+        # MUST draw Wg then Wu for each
+        for _ in range(2):
+            shared_Wg = W(d, d)
+            shared_Wu = W(d, d)
+            moe["shared"].append(
+                (shared_Wg, shared_Wu)
+            )
+
+        layers.append({
+            "type": layer_type,
+            "wq_res": wq_res,
+            "attn": attn,
+            "moe": moe,
+        })
+
+    # Final AttnRes pseudo-query MUST be drawn last
+    w_final = W(d)
+
+    # --------------------------------------------------
+    # 2. Forward pass
+    # --------------------------------------------------
+
+    tokens = np.asarray(tokens, dtype=int)
+
+    # First residual source is token embedding
+    sources = [emb[tokens]]              # [(T, 16)]
+
+    for layer in layers:
+
+        # Attend over embedding + all previous layer outputs
+        h = attnres_full(
+            layer["wq_res"],
+            sources
+        )                                # (T, 16)
+
+        params = layer["attn"]
+
+        # ---------------- KDA ----------------
+        if layer["type"] == "KDA":
+
+            q, k, v = kda_qkv(
+                h,
+                params
+            )
+
+            beta, z = kda_gates(
+                h,
+                params
+            )
+
+            # A = 0 -> exp(A) = 1
+            alpha = lower_bounded_decay(
+                z,
+                A=0.0
+            )
+
+            o, _ = kda_recurrence(
+                q,
+                k,
+                v,
+                alpha,
+                beta
+            )
+
+            a = kda_output_gate(
+                o,
+                h,
+                params["Wg"],
+                params["Wo"]
+            )
+
+        # ---------------- MLA ----------------
+        else:
+
+            o = nope_attention(
+                h,
+                params["Wq"],
+                params["Wc"],
+                params["Wk_up"],
+                params["Wv_up"],
+                n_heads
+            )
+
+            a = mla_output_gate(
+                o,
+                h,
+                params["Wg"],
+                params["Wo"]
+            )
+
+        # ---------------- MoE ----------------
+        # Residual around MoE
+        f = a + stable_latent_moe(
+            a,
+            layer["moe"]
+        )
+
+        # Make this layer available to later AttnRes
+        sources.append(f)
+
+    # --------------------------------------------------
+    # 3. Final AttnRes + tied LM head
+    # --------------------------------------------------
+
+    h_out = attnres_full(
+        w_final,
+        sources
+    )                                    # (T, 16)
+
+    # Tie output projection to embedding weights
+    logits = h_out @ emb.T               # (T, 17)
+
+    return logits
 
