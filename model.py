@@ -635,8 +635,26 @@ def newton_schulz(G, n_iters=5):
 
     return X
 
-# Step 27 - per_head_muon (not yet solved)
-# TODO: implement
+# Step 27 - per_head_muon
+def per_head_muon(M, n_heads, n_iters=5):
+    """Split M (d, H*dh) into H column blocks, newton_schulz each, re-concatenate."""
+    d, total_dim = M.shape
+
+    assert total_dim % n_heads == 0
+    dh = total_dim // n_heads
+
+    heads = []
+
+    for h in range(n_heads):
+        start = h * dh
+        end = (h + 1) * dh
+
+        M_h = M[:, start:end]                
+        M_h = newton_schulz(M_h, n_iters)     
+
+        heads.append(M_h)
+
+    return np.concatenate(heads, axis=1)
 
 # Step 28 - mini_k3_forward (not yet solved)
 # TODO: implement
